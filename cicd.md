@@ -1,0 +1,93 @@
+# Домашнее задание к занятию "09.02 CI\CD"
+
+## Знакомоство с SonarQube
+
+### Подготовка к выполнению
+
+1. Выполняем `docker pull sonarqube:8.7-community`
+2. Выполняем `docker run -d --name sonarqube -e SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true -p 9000:9000 sonarqube:8.7-community`
+3. Ждём запуск, смотрим логи через `docker logs -f sonarqube`
+4. Проверяем готовность сервиса через [браузер](http://localhost:9000)
+5. Заходим под admin\admin, меняем пароль на свой
+
+В целом, в [этой статье](https://docs.sonarqube.org/latest/setup/install-server/) описаны все варианты установки, включая и docker, но так как нам он нужен разово, то достаточно того набора действий, который я указал выше.
+
+### Основная часть
+
+1. Создаём новый проект, название произвольное
+2. Скачиваем пакет sonar-scanner, который нам предлагает скачать сам sonarqube
+3. Делаем так, чтобы binary был доступен через вызов в shell (или меняем переменную PATH или любой другой удобный вам способ)
+4. Проверяем `sonar-scanner --version`
+5. Запускаем анализатор против кода из директории [example](./example) с дополнительным ключом `-Dsonar.coverage.exclusions=fail.py`
+6. Смотрим результат в интерфейсе
+7. Исправляем ошибки, которые он выявил(включая warnings)
+8. Запускаем анализатор повторно - проверяем, что QG пройдены успешно
+9. Делаем скриншот успешного прохождения анализа, прикладываем к решению ДЗ
+
+### Ответ: 
+<p align="center">
+  <img width="1200" height="700" src="./jpg/qub1.png">
+</p>
+<p align="center">
+  <img width="1200" height="700" src="./jpg/qub2.png">
+</p>
+
+## Знакомство с Nexus
+
+### Подготовка к выполнению
+
+1. Выполняем `docker pull sonatype/nexus3`
+2. Выполняем `docker run -d -p 8081:8081 --name nexus sonatype/nexus3`
+3. Ждём запуск, смотрим логи через `docker logs -f nexus`
+4. Проверяем готовность сервиса через [бразуер](http://localhost:8081)
+5. Узнаём пароль от admin через `docker exec -it nexus /bin/bash`
+6. Подключаемся под админом, меняем пароль, сохраняем анонимный доступ
+
+### Основная часть
+
+1. В репозиторий `maven-public` загружаем артефакт с GAV параметрами:
+   1. groupId: netology
+   2. artifactId: java
+   3. version: 8_282
+   4. classifier: distrib
+   5. type: tar.gz
+2. В него же загружаем такой же артефакт, но с version: 8_102
+3. Проверяем, что все файлы загрузились успешно
+4. В ответе присылаем файл `maven-metadata.xml` для этого артефекта
+
+### Ответ:
+[Файл maven-metadata.xml](./jpg/maven-metadata.xml) 
+
+<p align="center">
+  <img width="1200" height="700" src="./jpg/nex.png">
+</p>
+
+### Знакомство с Maven
+
+### Подготовка к выполнению
+
+1. Скачиваем дистрибутив с [maven](https://maven.apache.org/download.cgi)
+2. Разархивируем, делаем так, чтобы binary был доступен через вызов в shell (или меняем переменную PATH или любой другой удобный вам способ)
+3. Проверяем `mvn --version`
+4. Забираем директорию [mvn](./mvn) с pom
+
+### Основная часть
+
+1. Меняем в `pom.xml` блок с зависимостями под наш артефакт из первого пункта задания для Nexus (java с версией 8_282)
+2. Запускаем команду `mvn package` в директории с `pom.xml`, ожидаем успешного окончания
+3. Проверяем директорию `~/.m2/repository/`, находим наш артефакт
+4. В ответе присылаем исправленный файл `pom.xml`
+
+### Ответ: 
+[Исправленный файл pom.xml](./jpg/pom.xml)
+
+```
+oot@vir-PC:/home/vir/dz/cicd/mvn# ll ~/.m2/repository/netology/java/8_282/
+итого 24
+drwxr-xr-x 2 root root 4096 авг 20 22:30 ./
+drwxr-xr-x 3 root root 4096 авг 20 22:21 ../
+-rw-r--r-- 1 root root  370 авг 20 22:21 java-8_282-distrib.tar.gz
+-rw-r--r-- 1 root root   40 авг 20 22:21 java-8_282-distrib.tar.gz.sha1
+-rw-r--r-- 1 root root  727 авг 20 22:30 java-8_282.pom.lastUpdated
+-rw-r--r-- 1 root root  176 авг 20 22:21 _remote.repositories
+```
